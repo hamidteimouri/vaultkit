@@ -1,6 +1,6 @@
 module github.com/hamidteimouri/vaultkit
 
-go 1.23.0
+go 1.24
 
 require github.com/hashicorp/vault/api v1.22.0
 
