@@ -3,9 +3,9 @@ package vaultkit
 import (
 	"context"
 	"fmt"
-	"sync"
-
 	vault "github.com/hashicorp/vault/api"
+	"github.com/mitchellh/mapstructure"
+	"sync"
 )
 
 type Client struct {
@@ -65,4 +65,22 @@ func (vc *Client) GetSecret(mountPath, secretPath string) (map[string]interface{
 	}
 
 	return secret.Data, nil
+}
+
+// GetAndDecode reads secret data and decodes it into a struct
+func (vc *Client) GetAndDecode(mountPath, secretPath string, out interface{}) error {
+	vc.mu.Lock()
+	defer vc.mu.Unlock()
+
+	kv := vc.vaultClient.KVv2(mountPath)
+	secret, err := kv.Get(context.Background(), secretPath)
+	if err != nil {
+		return fmt.Errorf("vault get error: %w", err)
+	}
+
+	if err := mapstructure.Decode(secret.Data, out); err != nil {
+		return fmt.Errorf("failed to decode secret data: %w", err)
+	}
+
+	return nil
 }
